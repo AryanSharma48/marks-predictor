@@ -1,12 +1,16 @@
 # Student Academic Performance Predictor
 
-An end-to-end Machine Learning Early Warning System designed to forecast secondary school student final academic performance (Portuguese language course) prior to semester evaluations. 
+An end-to-end Machine Learning Early Warning System built purely on the **Linear Regression algorithm** to predict a student's final academic score (`G3`, 0 to 20 scale) on **Day 1 of the semester**.
 
-The project features a dual-model architecture: a first-principles Linear Regression model built from scratch using pure NumPy and Batch Gradient Descent, benchmarked against an industry-standard Scikit-Learn implementation.
+### Key Architectural Highlights:
+- **Pure Linear Regression Focus**: Solved end-to-end using both a custom from-scratch implementation (pure NumPy and Batch Gradient Descent) and an industry-standard Scikit-Learn Ordinary Least Squares benchmark.
+- **Proactive Early Warning Framing**: Designed to identify at-risk students before classes and exams begin, enabling targeted tutoring and academic intervention.
+- **Strict Data Leakage Prevention**: Mid-term grades (`G1` and `G2`) are **intentionally dropped**. While including them creates a trivial model that simply copies prior test results (0.92 correlation), excluding them forces the Linear Regression model to uncover genuine behavioral, demographic, and study habit drivers.
 
 ---
 
 ## Table of Contents
+- [Core Machine Learning Premise](#core-machine-learning-premise)
 - [Problem Formulation](#problem-formulation)
 - [Dataset and Feature Engineering](#dataset-and-feature-engineering)
 - [Machine Learning Architecture](#machine-learning-architecture)
@@ -15,6 +19,21 @@ The project features a dual-model architecture: a first-principles Linear Regres
 - [Repository Structure](#repository-structure)
 - [Installation and Quickstart](#installation-and-quickstart)
 - [Automated Testing](#automated-testing)
+
+---
+
+## Core Machine Learning Premise
+
+This project is built around the mathematical foundations of **Linear Regression**:
+
+```text
+y_pred = (w1 * x1) + (w2 * x2) + ... + (w39 * x39) + b
+```
+
+Rather than treating Machine Learning as a black box:
+1. **Mathematical Derivation**: Forward hypothesis, Mean Squared Error cost function, and analytical partial derivatives (gradients) are implemented line-by-line from scratch.
+2. **Interpretability**: Because all features are standardized to a standard deviation of 1.0, the learned weights (`w`) provide direct transparency into what habits and conditions help or harm academic performance.
+3. **True Out-of-Sample Forecasting**: By dropping `G1` and `G2`, the model does not forecast test scores from test scores; it forecasts test scores from human behavioral indicators.
 
 ---
 
