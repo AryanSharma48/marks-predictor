@@ -170,7 +170,7 @@ def plot_regularization_comparison(base_dir: str, output_dir: str):
 
     models = {
         "OLS Linear": LinearRegression(),
-        "Ridge (a=100)": Ridge(alpha=100.0),
+        "Ridge (a=149)": Ridge(alpha=149.0),
         "Lasso (a=0.063)": Lasso(alpha=0.0631)
     }
 

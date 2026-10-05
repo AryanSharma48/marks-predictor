@@ -158,12 +158,12 @@ To counter potential overfitting across the 39 features, L1 (Lasso) and L2 (Ridg
 | Model Specification | Active Features | Zeroed Features | MAE | RMSE | R-squared (R^2) | Key Characteristic |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **OLS Linear Regression** | 39 | 0 | 1.8438 | 2.3826 | 0.1368 (13.7%) | Baseline OLS; fits all features without penalty |
-| **Ridge Regression (alpha=100.0, CV)** | 39 | 0 | **1.7887** | **2.3249** | **0.1781 (17.8%)** | L2 squared penalty; dampens weights evenly across all columns |
+| **Ridge Regression (alpha=149.0, CV)** | 39 | 0 | **1.7721** | **2.3079** | **0.1900 (19.0%)** | L2 squared penalty; dampens weights evenly across all columns |
 | **Lasso Regression (alpha=0.0631, CV)** | 31 | 8 | 1.8051 | 2.3277 | 0.1761 (17.6%) | L1 absolute penalty; eliminates 8 noisy features via 5-fold CV |
 
 ### Key Analytical Takeaways:
 1. **L2 Shrinkage vs. L1 Sparsity**:
-   - **Ridge (L2)** retains all 39 features but shrinks their coefficients toward zero, preventing any individual feature from dominating and improving R^2 by +4.1% over OLS.
+   - **Ridge (L2)** retains all 39 features but shrinks their coefficients toward zero, preventing any individual feature from dominating and improving R^2 to 19.0% (+5.3% over OLS).
    - **Lasso (L1)** acts as an automated feature selector by forcing unhelpful coefficients to exact zero (0.0). Cross-validation safely pruned 8 noisy features without test-set tuning.
 2. **Superior Generalization without Data Leakage**:
    - Both regularized methods were tuned strictly on training folds using cross-validation (`RidgeCV` and `LassoCV`), eliminating test-set snooping.
