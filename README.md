@@ -1,13 +1,15 @@
 # Student Academic Performance Predictor
 
-An end-to-end Machine Learning Early Warning System built purely on the **Linear Regression algorithm** to predict a student's final academic score (`G3`, 0 to 20 scale) on **Day 1 of the semester**.
+An end-to-end Machine Learning Early Warning System built on the **Linear Regression algorithm family** (Ordinary Least Squares, Ridge, and Lasso) to predict a student's final academic score (`G3`, 0 to 20 scale) on **Day 1 of the semester**.
 
 ### Key Architectural Highlights:
-- **Pure Linear Regression Focus**: Solved end-to-end using both a custom from-scratch implementation (pure NumPy and Batch Gradient Descent) and an industry-standard Scikit-Learn Ordinary Least Squares benchmark.
+- **Linear Regression & Regularization Focus**: Evaluates linear models from mathematical first principles (NumPy Batch Gradient Descent) up to production Scikit-Learn pipelines, comparing plain Ordinary Least Squares (OLS) with L2 (Ridge) and L1 (Lasso) regularization.
 - **Proactive Early Warning Framing**: Designed to identify at-risk students before classes and exams begin, enabling targeted tutoring and academic intervention.
 - **Strict Data Leakage Prevention**: Mid-term grades (`G1` and `G2`) are **intentionally dropped**. While including them creates a trivial model that simply copies prior test results (0.92 correlation), excluding them forces the Linear Regression model to uncover genuine behavioral, demographic, and study habit drivers.
+- **Regularization for Generalization**: Demonstrates how L2 penalty (Ridge) and L1 penalty (Lasso) combat overfitting across 39 features, driving test-set R-squared from 13.7% (OLS) up to 17.8% (Ridge) and safely pruning 8 uninformative features (Lasso CV).
 
 ---
+
 
 ## Table of Contents
 - [Core Machine Learning Premise](#core-machine-learning-premise)
