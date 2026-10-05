@@ -157,6 +157,91 @@ def plot_feature_importance(model, feature_names: list, output_dir: str):
     print(f"[Visualization] Saved: {save_path}")
 
 
+def plot_regularization_comparison(base_dir: str, output_dir: str):
+    """Plot 7: Comparison of OLS, Ridge, and Lasso Regularization on Early Detection."""
+    from sklearn.linear_model import LinearRegression, Ridge, Lasso
+    from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score
+
+    processed_dir = os.path.join(base_dir, "dataset", "processed")
+    X_train = pd.read_csv(os.path.join(processed_dir, "X_train.csv"))
+    X_test = pd.read_csv(os.path.join(processed_dir, "X_test.csv"))
+    y_train = pd.read_csv(os.path.join(processed_dir, "y_train.csv"))['G3'].values
+    y_test = pd.read_csv(os.path.join(processed_dir, "y_test.csv"))['G3'].values
+
+    models = {
+        "OLS Linear": LinearRegression(),
+        "Ridge (a=100)": Ridge(alpha=100.0),
+        "Lasso (a=0.063)": Lasso(alpha=0.0631)
+    }
+
+    results = []
+    for name, mdl in models.items():
+        mdl.fit(X_train, y_train)
+        preds = mdl.predict(X_test)
+        mae = mean_absolute_error(y_test, preds)
+        rmse = root_mean_squared_error(y_test, preds)
+        r2 = r2_score(y_test, preds)
+        active_features = int(np.sum(mdl.coef_ != 0))
+
+        results.append({
+            "Model": name,
+            "MAE": mae,
+            "RMSE": rmse,
+            "R2 Score": r2,
+            "Active Features": active_features
+        })
+
+    res_df = pd.DataFrame(results)
+
+    fig, axes = plt.subplots(1, 4, figsize=(18, 4.5))
+
+    # Metric 1: R2 Score
+    sns.barplot(data=res_df, x="Model", y="R2 Score", ax=axes[0], color="#2b5c8f")
+    axes[0].set_title("Variance Explained (R2 Score)", fontsize=11, fontweight="bold")
+    axes[0].set_ylabel("R2 Score (Higher is Better)")
+    for p in axes[0].patches:
+        axes[0].annotate(f"{p.get_height():.3f}", (p.get_x() + p.get_width() / 2., p.get_height()),
+                         ha='center', va='bottom', fontsize=9, xytext=(0, 3), textcoords='offset points')
+
+    # Metric 2: RMSE
+    sns.barplot(data=res_df, x="Model", y="RMSE", ax=axes[1], color="#d9534f")
+    axes[1].set_title("Prediction Spread (RMSE)", fontsize=11, fontweight="bold")
+    axes[1].set_ylabel("RMSE in Grade Points (Lower is Better)")
+    axes[1].set_ylim(2.0, 2.45)
+    for p in axes[1].patches:
+        axes[1].annotate(f"{p.get_height():.3f}", (p.get_x() + p.get_width() / 2., p.get_height()),
+                         ha='center', va='bottom', fontsize=9, xytext=(0, 3), textcoords='offset points')
+
+    # Metric 3: MAE
+    sns.barplot(data=res_df, x="Model", y="MAE", ax=axes[2], color="#f0ad4e")
+    axes[2].set_title("Average Error (MAE)", fontsize=11, fontweight="bold")
+    axes[2].set_ylabel("MAE in Grade Points (Lower is Better)")
+    axes[2].set_ylim(1.6, 1.95)
+    for p in axes[2].patches:
+        axes[2].annotate(f"{p.get_height():.3f}", (p.get_x() + p.get_width() / 2., p.get_height()),
+                         ha='center', va='bottom', fontsize=9, xytext=(0, 3), textcoords='offset points')
+
+    # Metric 4: Active Features
+    sns.barplot(data=res_df, x="Model", y="Active Features", ax=axes[3], color="#5cb85c")
+    axes[3].set_title("Feature Sparsity (Active Features)", fontsize=11, fontweight="bold")
+    axes[3].set_ylabel("Count of Non-Zero Features")
+    for p in axes[3].patches:
+        axes[3].annotate(f"{int(p.get_height())}", (p.get_x() + p.get_width() / 2., p.get_height()),
+                         ha='center', va='bottom', fontsize=9, xytext=(0, 3), textcoords='offset points')
+
+    for ax in axes:
+        ax.set_xlabel("")
+        ax.tick_params(axis='x', rotation=15)
+
+    plt.suptitle("Early Detection Model Comparison: OLS vs. Ridge vs. Lasso", fontsize=14, fontweight="bold", y=1.03)
+    plt.tight_layout()
+
+    save_path = os.path.join(output_dir, "7_model_comparison_regularization.png")
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close()
+    print(f"[Visualization] Saved: {save_path}")
+
+
 def main():
     setup_style()
 
@@ -188,7 +273,9 @@ def main():
     plot_actual_vs_predicted(y_test, y_pred, output_dir)
     plot_residuals(y_test, y_pred, output_dir)
     plot_feature_importance(model, feature_names, output_dir)
-    print("\n[Visualization] All 6 plots generated and saved successfully!")
+    plot_regularization_comparison(base_dir, output_dir)
+    print("\n[Visualization] All 7 plots generated and saved successfully!")
+
 
 
 if __name__ == '__main__':

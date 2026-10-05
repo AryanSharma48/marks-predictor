@@ -27,6 +27,17 @@ Both models achieved near-identical quantitative results on a held-out test set 
 
 ---
 
+## Regularization Analysis: OLS vs. Ridge vs. Lasso
+
+| Model Specification | Active Features | Zeroed Features | MAE | RMSE | R-squared (R^2) | Key Characteristic |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **OLS Linear Regression** | 39 | 0 | 1.8438 | 2.3826 | 0.1368 (13.7%) | Baseline OLS; fits all features without penalty |
+| **Ridge Regression (alpha=100.0)** | 39 | 0 | **1.7887** | 2.3249 | 0.1781 (17.8%) | L2 squared penalty; dampens weights evenly across all columns |
+| **Lasso Regression (alpha=0.0631, CV)** | 31 | 8 | 1.8051 | 2.3277 | 0.1761 (17.6%) | L1 absolute penalty; eliminates 8 noisy features via 5-fold CV |
+| **Lasso Regression (alpha=0.5, Sparse)** | **6** | **33** | 1.8005 | **2.2775** | **0.2112 (21.1%)** | Aggressive sparsity; isolates top 6 predictive drivers |
+
+---
+
 ## Key Drivers of Academic Performance
 
 ### Top Positive Contributors

@@ -16,9 +16,11 @@ An end-to-end Machine Learning Early Warning System built purely on the **Linear
 - [Machine Learning Architecture](#machine-learning-architecture)
 - [Visual Analysis and Findings](#visual-analysis-and-findings)
 - [Evaluation and Benchmark](#evaluation-and-benchmark)
+- [Regularization Analysis (OLS vs. Ridge vs. Lasso)](#regularization-analysis-ols-vs-ridge-vs-lasso)
 - [Repository Structure](#repository-structure)
 - [Installation and Quickstart](#installation-and-quickstart)
 - [Automated Testing](#automated-testing)
+
 
 ---
 
@@ -143,6 +145,30 @@ The custom NumPy implementation matches Scikit-Learn to three decimal places.
 
 ---
 
+## Regularization Analysis: OLS vs. Ridge vs. Lasso
+
+To counter potential overfitting across the 39 features, L1 (Lasso) and L2 (Ridge) regularizations were applied to the Early Detection problem.
+
+![Regularization Comparison](reports/figures/7_model_comparison_regularization.png)
+
+### Quantitative Comparison on Held-Out Test Set (N=130):
+
+| Model Specification | Active Features | Zeroed Features | MAE | RMSE | R-squared (R^2) | Key Characteristic |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **OLS Linear Regression** | 39 | 0 | 1.8438 | 2.3826 | 0.1368 (13.7%) | Baseline OLS; fits all features without penalty |
+| **Ridge Regression (alpha=100.0, CV)** | 39 | 0 | **1.7887** | **2.3249** | **0.1781 (17.8%)** | L2 squared penalty; dampens weights evenly across all columns |
+| **Lasso Regression (alpha=0.0631, CV)** | 31 | 8 | 1.8051 | 2.3277 | 0.1761 (17.6%) | L1 absolute penalty; eliminates 8 noisy features via 5-fold CV |
+
+### Key Analytical Takeaways:
+1. **L2 Shrinkage vs. L1 Sparsity**:
+   - **Ridge (L2)** retains all 39 features but shrinks their coefficients toward zero, preventing any individual feature from dominating and improving R^2 by +4.1% over OLS.
+   - **Lasso (L1)** acts as an automated feature selector by forcing unhelpful coefficients to exact zero (0.0). Cross-validation safely pruned 8 noisy features without test-set tuning.
+2. **Superior Generalization without Data Leakage**:
+   - Both regularized methods were tuned strictly on training folds using cross-validation (`RidgeCV` and `LassoCV`), eliminating test-set snooping.
+   - Both regularized methods decisively beat unregularized OLS across every single metric (lower MAE, lower RMSE, and higher R^2), confirming that penalizing weight complexity reduces test-set variance.
+
+---
+
 ## Repository Structure
 
 ```text
@@ -166,6 +192,8 @@ score-predictor/
 |   |-- 1-preprocessing.ipynb
 |   |-- 2-modelling.ipynb
 |   |-- 3-scikitlearn.ipynb
+|   |-- 4-lasso.ipynb
+|   |-- 5-ridge.ipynb
 |-- reports/
 |   |-- model_evaluation_report.md
 |   |-- figures/
@@ -175,6 +203,7 @@ score-predictor/
 |       |-- 4_actual_vs_predicted.png
 |       |-- 5_residuals_distribution.png
 |       |-- 6_feature_importance.png
+|       |-- 7_model_comparison_regularization.png
 |-- src/
 |   |-- preprocessing.py
 |   |-- train.py
