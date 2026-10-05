@@ -1,0 +1,222 @@
+# Student Academic Performance Predictor
+
+An end-to-end Machine Learning Early Warning System designed to forecast secondary school student final academic performance (Portuguese language course) prior to semester evaluations. 
+
+The project features a dual-model architecture: a first-principles Linear Regression model built from scratch using pure NumPy and Batch Gradient Descent, benchmarked against an industry-standard Scikit-Learn implementation.
+
+---
+
+## Table of Contents
+- [Problem Formulation](#problem-formulation)
+- [Dataset and Feature Engineering](#dataset-and-feature-engineering)
+- [Machine Learning Architecture](#machine-learning-architecture)
+- [Visual Analysis and Findings](#visual-analysis-and-findings)
+- [Evaluation and Benchmark](#evaluation-and-benchmark)
+- [Repository Structure](#repository-structure)
+- [Installation and Quickstart](#installation-and-quickstart)
+- [Automated Testing](#automated-testing)
+
+---
+
+## Problem Formulation
+
+The objective is to predict a student's final examination score (`G3`, measured on a 0 to 20 scale) on the first day of the academic period using demographic, social, family, and study habit indicators.
+
+### Elimination of Data Leakage (Early Warning Scope)
+In the raw UCI dataset, first period grade (`G1`) and second period grade (`G2`) have Pearson correlations of 0.83 and 0.92 with the final grade (`G3`). While including them produces artificially high accuracy, it eliminates practical utility for early academic intervention. 
+
+To build a true Early Warning System, `G1` and `G2` are strictly excluded from the feature matrix:
+
+```text
+Target Variable: G3 (Continuous Score, 0 - 20)
+Excluded Features: G1, G2 (Prevents Data Leakage)
+Input Matrix: 30 Raw Demographic and Behavioral Attributes
+```
+
+---
+
+## Dataset and Feature Engineering
+
+The project utilizes the Portuguese secondary education student dataset (649 observations) from the UCI Machine Learning Repository.
+
+### Preprocessing Pipeline:
+1. **Target Isolation**: Target `y` (`G3`) is extracted, and `G1`, `G2`, `G3` are dropped from features `X`.
+2. **One-Hot Encoding**: Categorical variables are converted to numeric indicators using `drop_first=True` to eliminate the Dummy Variable Trap (perfect multicollinearity). This expands the feature space to 39 numerical columns.
+3. **Reproducible Split**: An 80/20 train-test split (519 train, 130 test) is performed with a fixed random seed (`42`).
+4. **Z-Score Standardization**:
+   ```text
+   x_scaled = (x - mean_train) / std_train
+   ```
+   Means and standard deviations are computed strictly from `X_train` and subsequently applied to `X_test` and production inputs to avoid test set contamination.
+
+---
+
+## Machine Learning Architecture
+
+### 1. From-Scratch Model (NumPy Batch Gradient Descent)
+Implemented in `src/train.py` without machine learning libraries:
+- **Prediction Hypothesis**: `y_pred = (X @ w) + b`
+- **Cost Function (Mean Squared Error)**:
+  ```text
+  J(w, b) = (1 / (2 * m)) * sum((y_pred - y)^2)
+  ```
+- **Analytical Gradients**:
+  ```text
+  dw = (1 / m) * (X.T @ (y_pred - y))
+  db = (1 / m) * sum(y_pred - y)
+  ```
+- **Parameter Updates**:
+  ```text
+  w = w - (learning_rate * dw)
+  b = b - (learning_rate * db)
+  ```
+- **Hyperparameters**: `learning_rate = 0.01`, `epochs = 1000`, initialized with `w = zeros(39)` and `b = 0.0`.
+
+### 2. Benchmark Model (Scikit-Learn)
+Implemented using `sklearn.linear_model.LinearRegression` to provide an exact closed-form benchmark.
+
+---
+
+## Visual Analysis and Findings
+
+All visualizations are generated using Seaborn and Matplotlib via `python src/visualize.py` and saved to `reports/figures/`.
+
+### 1. Target Grade Distribution
+![Target Distribution](reports/figures/1_target_distribution.png)
+The target grade (`G3`) follows a near-normal distribution centered around 12.0. A discrete cluster of 15 students scored exactly 0.0, indicating exam absences or dropouts rather than normal academic variance.
+
+### 2. Feature Correlations with Final Grade
+![Feature Correlations](reports/figures/2_feature_correlations.png)
+Pearson linear correlation shows study time and parental education as the strongest positive numeric drivers, while past class failures and alcohol consumption (`Dalc`, `Walc`) exhibit strong negative correlations.
+
+### 3. Gradient Descent Loss Curve
+![Cost Convergence](reports/figures/3_cost_convergence.png)
+The from-scratch gradient descent cost curve begins at 76.01, drops sharply within the initial 200 epochs, and stabilizes at 3.52 by epoch 500, confirming smooth mathematical convergence.
+
+### 4. Actual vs. Predicted Evaluation
+![Actual vs Predicted](reports/figures/4_actual_vs_predicted.png)
+On the held-out test set (130 students), predictions track the ideal diagonal reference line (`y = x`) across the primary 10 to 15 grade band.
+
+### 5. Residuals Distribution
+![Residuals Distribution](reports/figures/5_residuals_distribution.png)
+Errors (`y_pred - y_test`) form a symmetric bell curve centered at zero (mean error approximately 0.0), proving that model predictions are unbiased.
+
+### 6. Standardized Regression Coefficients (Feature Importance)
+![Feature Importance](reports/figures/6_feature_importance.png)
+Standardized weights identify the primary levers affecting student outcomes:
+- **Top Positive Drivers**: Higher education intent (`higher_yes`, +0.540) and weekly study time (`studytime`, +0.373).
+- **Top Negative Drivers**: Past class failures (`failures`, -0.881) and remedial support (`schoolsup_yes`, -0.397, reflecting students pre-identified as struggling).
+
+---
+
+## Evaluation and Benchmark
+
+Both models were evaluated on the identical 130-sample held-out test set:
+
+| Evaluation Metric | From-Scratch Model (NumPy) | Scikit-Learn Model (OLS) | Absolute Difference |
+| :--- | :--- | :--- | :--- |
+| **Mean Absolute Error (MAE)** | 1.8438 | 1.8438 | 0.0000 |
+| **Root Mean Squared Error (RMSE)** | 2.3831 | 2.3826 | 0.0005 |
+| **R-squared (R^2)** | 0.1364 | 0.1368 | 0.0004 |
+| **Final MSE Cost** | 3.5211 | 3.5208 | 0.0003 |
+
+The custom NumPy implementation matches Scikit-Learn to three decimal places.
+
+---
+
+## Repository Structure
+
+```text
+score-predictor/
+|-- dataset/
+|   |-- raw/
+|   |   |-- student-mat.csv
+|   |   |-- student-por.csv
+|   |-- processed/
+|       |-- X_train.csv
+|       |-- X_test.csv
+|       |-- y_train.csv
+|       |-- y_test.csv
+|       |-- means.csv
+|       |-- stds.csv
+|-- model/
+|   |-- scratch_model.joblib
+|   |-- student_model_sklearn.joblib
+|-- notebooks/
+|   |-- 0-eda.ipynb
+|   |-- 1-preprocessing.ipynb
+|   |-- 2-modelling.ipynb
+|   |-- 3-scikitlearn.ipynb
+|-- reports/
+|   |-- model_evaluation_report.md
+|   |-- figures/
+|       |-- 1_target_distribution.png
+|       |-- 2_feature_correlations.png
+|       |-- 3_cost_convergence.png
+|       |-- 4_actual_vs_predicted.png
+|       |-- 5_residuals_distribution.png
+|       |-- 6_feature_importance.png
+|-- src/
+|   |-- preprocessing.py
+|   |-- train.py
+|   |-- predict.py
+|   |-- visualize.py
+|-- tests/
+|   |-- test_pipeline.py
+|-- .gitignore
+|-- requirements.txt
+`-- README.md
+```
+
+---
+
+## Installation and Quickstart
+
+### 1. Clone Repository and Install Dependencies
+```bash
+git clone https://github.com/AryanSharma48/marks-predictor.git
+cd marks-predictor
+pip install -r requirements.txt
+```
+
+### 2. Run Data Preprocessing
+Executes one-hot encoding, train-test splitting, and standardization:
+```bash
+python src/preprocessing.py
+```
+
+### 3. Train Models
+Trains both scratch and Scikit-Learn models and saves artifacts to `model/`:
+```bash
+python src/train.py
+```
+
+### 4. Run Sample Inference
+Executes prediction for a sample student dictionary:
+```bash
+python src/predict.py
+```
+
+### 5. Generate Figures
+Regenerates all visual reports in `reports/figures/`:
+```bash
+python src/visualize.py
+```
+
+---
+
+## Automated Testing
+
+Run the automated test suite with pytest:
+```bash
+pytest tests/test_pipeline.py -v
+```
+
+The test suite validates:
+1. Raw data schema and column integrity.
+2. Complete absence of data leakage (`G1`, `G2`, `G3` excluded from feature matrix).
+3. Mean of 0.0 and standard deviation of 1.0 across standardized training features.
+4. Correct serialization and loading of `.joblib` model bundles.
+5. Output clamping within the valid academic range `[0.0, 20.0]`.
+6. Output consistency between from-scratch and Scikit-Learn engines.
+7. Robustness against extreme inputs and partial category dictionaries.
